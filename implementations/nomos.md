@@ -73,10 +73,11 @@ flowchart LR
     GY["governance.yml"]
     MD["constitutions\nand ADRs"]
     GK["Gherkin\nfeatures"]
+    TM["teams/<name>/\naddenda · ADRs · checks"]
 
     NS["Nomos Server"]
 
-    MCP["MCP tools"]
+    MCP["MCP tools\n/mcp or /teams/<name>/mcp"]
     CLI["CLI validator"]
     BDD["Gherkin runner"]
 
@@ -87,6 +88,7 @@ flowchart LR
     GY --> NS
     MD --> NS
     GK --> NS
+    TM -->|"merged on request"| NS
 
     NS --> MCP
     NS --> CLI
@@ -142,14 +144,16 @@ When a rule changes in the governance repo, the GitHub webhook fires, the server
 
 ```mermaid
 flowchart LR
-    GR["Governance Repository"]
+    GR["Governance Repository\ndomain rules"]
+    TG["teams/<name>/\nteam addenda"]
     NS["Nomos Server\none shared instance"]
-    A1["Team A — AI agent"]
-    A2["Team B — AI agent"]
+    A1["Team A — /teams/team-a/mcp"]
+    A2["Team B — /teams/team-b/mcp"]
     CI["CI pipelines"]
     PC["Pre-commit hooks"]
 
     GR -->|"push → webhook"| NS
+    TG -->|"push → webhook"| NS
     NS --> A1
     NS --> A2
     NS --> CI

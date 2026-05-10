@@ -76,13 +76,15 @@ The central principle: no team owns a copy of the rules. Every agent, hook, and 
 ```mermaid
 flowchart TD
     GR["Governance Repository\nconstitutions · ADRs · governance.yml"]
+    TG["teams/<name>/\nteam-scoped addenda"]
     NS["Governance Server"]
-    A1["AI Agent — Team A"]
-    A2["AI Agent — Team B"]
+    A1["AI Agent — Team A\n/teams/team-a/mcp"]
+    A2["AI Agent — Team B\n/teams/team-b/mcp"]
     CI["CI Pipeline"]
     PC["Pre-commit Hook"]
 
     GR --> NS
+    TG -->|"merged on request"| NS
     NS --> A1
     NS --> A2
     NS --> CI
