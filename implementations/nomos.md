@@ -48,6 +48,12 @@ nomos-validate --server https://governance.yourcompany.com sa "sa-payments-conne
 # Scaffold a new domain (constitution + ADR + Gherkin template)
 nomos scaffold domain kafka
 
+# Scaffold a team governance directory
+nomos scaffold team team-pos
+
+# Connect a team's agent to team-scoped rules
+nomos install-hooks --server https://governance.acme.com --team team-pos
+
 # Verify a @wip scenario is ready to promote to @enforced
 nomos check-promotion features/kafka/topic-naming.feature --run
 ```
