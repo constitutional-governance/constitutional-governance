@@ -31,12 +31,25 @@ get_checks("kafka")         → [{title, status, path}, ...]
 get_active_rules()          → full governance.yml as structured object
 ```
 
-**For pre-commit hooks:**
+**For pre-commit hooks and team onboarding:**
 
 ```bash
-nomos validate topic "payments.processed.v1"
-nomos validate rbac --file domain/team/rbac.hcl
-nomos lint --path domain/team/
+# Install .mcp.json + pre-commit hook in a project repo (one command)
+nomos install-hooks --server https://governance.yourcompany.com
+
+# Validate a resource against the shared server
+nomos-validate --server https://governance.yourcompany.com topic "payments.processed.v1"
+nomos-validate --server https://governance.yourcompany.com sa "sa-payments-connector-source-jdbc-prod"
+```
+
+**For governance authoring:**
+
+```bash
+# Scaffold a new domain (constitution + ADR + Gherkin template)
+nomos scaffold domain kafka
+
+# Verify a @wip scenario is ready to promote to @enforced
+nomos check-promotion features/kafka/topic-naming.feature --run
 ```
 
 **For CI:**
