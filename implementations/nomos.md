@@ -111,24 +111,56 @@ Teams do not run their own governance server. They point their tools and agents 
 ```json
 {
   "mcpServers": {
-    "governance": {
-      "command": "uvx",
-      "args": ["nomos"],
-      "env": {
-        "GOVERNANCE_REPO_PATH": "/path/to/governance-repo"
-      }
+    "nomos": {
+      "type": "http",
+      "url": "https://governance.yourcompany.com/mcp"
     }
   }
 }
 ```
 
-When a rule changes in the governance repo, every agent that queries the server gets the updated rule immediately. No redistribution. No stale copies.
+When a rule changes in the governance repo, the GitHub webhook fires, the server invalidates its cache, and every agent that queries it gets the updated rule immediately. No redistribution. No stale copies.
+
+```mermaid
+flowchart LR
+    GR["Governance Repository"]
+    NS["Nomos Server\none shared instance"]
+    A1["Team A — AI agent"]
+    A2["Team B — AI agent"]
+    CI["CI pipelines"]
+    PC["Pre-commit hooks"]
+
+    GR -->|"push → webhook"| NS
+    NS --> A1
+    NS --> A2
+    NS --> CI
+    NS --> PC
+```
+
+---
+
+## Getting started
+
+**Server** (install once, operated by the platform team):
+
+```bash
+pip install nomos
+nomos --github https://github.com/your-org/your-governance-repo
+```
+
+**Governance template** (fork once per organization, owned by the platform team):
+
+→ [nomos-template](https://github.com/your-org/nomos-template) — governance repository starter with constitutions, ADRs, Gherkin checks, and adoption guides
+
+**For product teams** connecting to an existing Nomos instance, see:
+
+→ [nomos-template/FOR-TEAMS.md](https://github.com/your-org/nomos-template/blob/main/FOR-TEAMS.md)
 
 ---
 
 ## Status
 
-Nomos is in active development. The core MCP interface, CLI validators, and Gherkin runner are functional.
+Nomos is in active development. The core MCP interface, CLI validators, REST endpoints, and Gherkin runner are functional.
 
 → [GitHub repository](https://github.com/your-org/nomos) *(update this link)*
 
