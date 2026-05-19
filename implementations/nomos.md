@@ -168,16 +168,16 @@ flowchart LR
 
 ```bash
 pip install nomos
-nomos --github https://github.com/your-org/your-governance-repo
+nomos --github https://github.com/constitutional-governance/nomos-template
 ```
 
 **Governance template** (fork once per organization, owned by the platform team):
 
-→ [nomos-template](https://github.com/your-org/nomos-template) — governance repository starter with constitutions, ADRs, Gherkin checks, and adoption guides
+→ [nomos-template](https://github.com/constitutional-governance/nomos-template) — governance repository starter with constitutions, ADRs, Gherkin checks, and adoption guides
 
 **For product teams** connecting to an existing Nomos instance, see:
 
-→ [nomos-template/FOR-TEAMS.md](https://github.com/your-org/nomos-template/blob/main/FOR-TEAMS.md)
+→ [nomos-template/FOR-TEAMS.md](https://github.com/constitutional-governance/nomos-template/blob/main/FOR-TEAMS.md)
 
 ---
 
@@ -185,7 +185,7 @@ nomos --github https://github.com/your-org/your-governance-repo
 
 Nomos is in active development. The core MCP interface, CLI validators, REST endpoints, and Gherkin runner are functional.
 
-→ [GitHub repository](https://github.com/your-org/nomos) *(update this link)*
+→ [GitHub repository](https://github.com/constitutional-governance/nomos)
 
 ---
 
