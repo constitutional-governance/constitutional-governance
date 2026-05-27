@@ -2,25 +2,126 @@
 
 > *Rules that cannot be tested are not governance — they are suggestions.*
 
-Constitutional Governance is a methodology for technical organizations that treats governance as infrastructure: written down, version-controlled, tested, and enforced automatically — for humans and AI agents alike.
+Constitutional Governance is a methodology for treating organizational rules as infrastructure: version-controlled, machine-readable, enforced automatically, and queryable by AI agents before they generate a single line of code.
 
 ---
 
-## The problem
+## The problem nobody has solved yet
 
-Most engineering organizations govern themselves by accident. Conventions live in wikis nobody updates. Architectural decisions are tribal knowledge that leaves with senior engineers. Standards circulate as PDFs and are forgotten within a week.
+Your AI agents are stateless. Every session starts at zero — no memory of last week's architecture discussion, no knowledge of why your API follows a specific versioning convention, no awareness of the ADR your team debated for three weeks. The agent isn't unintelligent. **It is uninformed. And the cost of being uninformed is paid by the humans who must catch and correct the violations.**
 
-This was manageable when humans were the only contributors. It is not manageable when AI coding agents generate code at a rate that outpaces any review process — and carry no organizational memory between sessions.
+Most organizations respond to this by writing better documentation. Longer READMEs. More detailed wikis. A Confluence doc with a bright yellow WARNING at the top.
 
-**The agent is not unintelligent. It is uninformed. And the cost of being uninformed is paid by the humans who must catch and correct the violations.**
+Two months later: same violations. Different agents. Same ignorance.
 
-Constitutional Governance solves this by making rules explicit, machine-readable, and delegated from a single authority — so that every tool, every pipeline, and every AI agent operates under the same governance, automatically.
+The documentation approach was already fragile when humans were the only contributors. With AI agents generating code at rates that outpace any review process, it has broken completely. You need governance that machines can read, query, and act on — not governance that assumes someone will read a PDF.
+
+---
+
+## What this is
+
+A four-layer methodology where governance rules are **specs**, not documents. Same discipline you apply to OpenAPI schemas or Avro definitions — versioned, testable, enforced — applied one layer up: to the organizational rules that determine whether the code is correct in the first place.
+
+| Layer | Role | Enforcement point |
+|---|---|---|
+| **Constitution** | Non-negotiable domain principles — the *why* | Constrains all layers below |
+| **ADRs** | Specific decisions with mandatory rationale | Constrains implementations |
+| **Validators** | Executable functions returning `{valid, errors[], warnings[]}` | Generation time + pre-commit |
+| **Gherkin checks** | BDD scenarios that gate CI | Every PR, no exceptions |
+
+Each layer constrains the one below. Validators can't permit what constitutions prohibit. ADRs can't override constitutional principles. The authority chain is explicit and traceable.
+
+---
+
+## Why not OPA, Conftest, or a linter?
+
+Good question. Those tools enforce rules at a specific point in the pipeline — usually CI. Constitutional Governance does something different:
+
+**It makes rules queryable before generation.** Via MCP (Model Context Protocol), an AI agent can call `get_conventions()`, `get_constitution()`, and `validate_resource()` *before* producing output. The agent reads the spec, applies it, self-validates. The violation never happens. OPA catches violations after the fact. Constitutional Governance prevents them.
+
+**It enforces rationale.** An ADR without a *why* is rejected. This matters for AI agents: a rule without rationale can't be applied to edge cases the rule-writers didn't anticipate. A principle with rationale can.
+
+**It centralizes authority, not just enforcement.** No team owns a copy of the rules. Every agent config, CI pipeline, and pre-commit hook delegates to a single governance repository. One change propagates everywhere. No drift, no forks, no "which version of the convention are we on?"
+
+**It catalogs systematic AI failures.** `get_knowledge("failures")` returns a structured catalog of the specific mistakes AI agents make on *your* platform. Not generic anti-patterns — your platform's patterns, queryable before generation. No linter does this.
+
+---
+
+## How it works
+
+### The governance hierarchy
+
+```mermaid
+flowchart TD
+    C["Constitution\nWhy consistency matters in this domain"]
+    A["ADRs\nSpecific decisions with rationale"]
+    V["Validators\nExecutable enforcement functions"]
+    G["Gherkin checks\nCI-enforced compliance tests"]
+
+    C -->|constrains| A
+    A -->|constrains| V
+    V -->|gates| G
+```
+
+### Enforcement is layered — violations caught earlier cost less
+
+```mermaid
+flowchart LR
+    G["Guidance\nMCP query\nbefore generation\n≈ zero cost"]
+    V["Validation\nself-check\nduring generation"]
+    C["Pre-commit\nhook\nbefore sharing"]
+    I["CI\nGherkin suite\nbefore merging\nhighest cost"]
+
+    G -->|cheapest to fix| V --> C -->|costliest to fix| I
+```
+
+### Delegation over distribution
+
+No team owns a copy of the rules. Every consumer delegates to one source of truth.
+
+```mermaid
+flowchart TD
+    GR["Governance Repository\nconstitutions · ADRs · governance.yml"]
+    NS["Governance Server\n(govern-mcp)"]
+    A1["AI Agent — Team A"]
+    A2["AI Agent — Team B"]
+    CI["CI Pipeline"]
+    PC["Pre-commit Hook"]
+
+    GR --> NS
+    NS --> A1
+    NS --> A2
+    NS --> CI
+    NS --> PC
+```
+
+When a rule changes, it changes once. Everything downstream inherits it automatically.
+
+### The recommended agent workflow
+
+```
+1. get_knowledge("failures")    ← read what agents get wrong on this platform
+2. get_conventions(domain)      ← load naming rules, valid enums, patterns
+3. get_constitution(domain)     ← load non-negotiable principles
+4. [generate the resource]
+5. validate_resource(output)    ← self-check before returning
+```
+
+---
+
+## In production
+
+A platform team of 8 engineers at a retail multinational runs this on their data streaming platform: ~200 Kafka topics, ~1 MB/s throughput.
+
+- PR review time related to governance: **reduced by 10x**
+- Naming violations reaching production: **zero** — not reduced, eliminated. The pipeline doesn't let them through.
+- Onboarding new engineers to platform conventions: from "read this doc and hope for the best" to "the tooling tells you what's wrong before you commit"
+
+One note for skeptics: at some point, a Gherkin check was validating against an outdated dependency version, causing valid PRs to fail CI. It was detected, fixed, and merged like any other bug. The fix propagated automatically to every pipeline consuming the governance repo. This is what "governance as code" means in practice: when it's wrong, it fails visibly and is fixable. Better than governance that's wrong silently in a wiki for six months.
 
 ---
 
 ## Core values
-
-We value:
 
 - **Codified rules** over documented conventions
 - **Delegated authority** over distributed copies
@@ -30,82 +131,20 @@ We value:
 
 ---
 
-## How it works
+## Getting started
 
-A Constitutional Governance system has four components:
+Constitutional Governance is a methodology first, tooling second. You can start today:
 
-| Component | Role | Analogy |
-|---|---|---|
-| **Constitution** | Non-negotiable domain principles | Constitutional law |
-| **ADRs** | Specific decisions with rationale | Statutes |
-| **Validators** | Executable enforcement of the rules | Judiciary |
-| **Gherkin checks** | Verifiable compliance tests | Audit |
+1. Write a `constitution.md` for one technical domain your team owns
+2. Record your three most significant architectural decisions as ADRs — with rationale
+3. Write a validator for your most commonly violated convention
+4. Run it in CI
 
-### The governance hierarchy
+The methodology scales from there. The tooling accelerates it.
 
-Rules are not flat — they have authority levels. Constitutions constrain decisions, decisions constrain implementations.
-
-```mermaid
-flowchart TD
-    C["Constitution\nWhy consistency matters in this domain"]
-    A["ADRs\nSpecific decisions with rationale"]
-    I["Implementations\nHCL · YAML · Code · Config"]
-
-    C -->|constrains| A
-    A -->|constrains| I
-```
-
-### Enforcement is layered
-
-Rules are enforced at four progressive gates. Violations caught earlier cost less to fix.
-
-```mermaid
-flowchart LR
-    G["Guidance\nMCP query\nbefore generation"]
-    V["Validation\nreal-time check\nduring generation"]
-    C["Commit\npre-commit hook\nbefore sharing"]
-    I["CI\nGherkin suite\nbefore merging"]
-
-    G -->|cheapest| V --> C -->|costliest| I
-```
-
-### Delegation over distribution
-
-The central principle: no team owns a copy of the rules. Every agent, hook, and pipeline delegates to a single governance authority. When a rule changes, it changes once and propagates everywhere.
-
-```mermaid
-flowchart TD
-    GR["Governance Repository\nconstitutions · ADRs · governance.yml"]
-    TG["teams/<name>/\nteam-scoped addenda"]
-    NS["Governance Server"]
-    A1["AI Agent — Team A\n/teams/team-a/mcp"]
-    A2["AI Agent — Team B\n/teams/team-b/mcp"]
-    CI["CI Pipeline"]
-    PC["Pre-commit Hook"]
-
-    GR --> NS
-    TG -->|"merged on request"| NS
-    NS --> A1
-    NS --> A2
-    NS --> CI
-    NS --> PC
-```
-
----
-
-## Read the manifesto
-
-→ [MANIFESTO.md](MANIFESTO.md)
-
+→ [Read the full manifesto](MANIFESTO.md)
 → [The 10 Principles](PRINCIPLES.md)
-
----
-
-## Reference implementation
-
-**Nomos** is the open-source governance server that operationalizes Constitutional Governance for engineering platforms. It exposes governance rules as MCP tools queryable by AI agents, as a CLI for pre-commit hooks, and as a Gherkin test suite for CI pipelines.
-
-→ [implementations/nomos.md](implementations/nomos.md)
+→ [Reference implementation: Nomos](implementations/nomos.md)
 
 ---
 
@@ -116,25 +155,26 @@ flowchart TD
 
 ---
 
-## Adopting Constitutional Governance
+## Relationship to agentic patterns
 
-Constitutional Governance is not software — it is a methodology. You can adopt it today without any tooling:
+Constitutional Governance implements several patterns catalogued by the [Agentic Patterns community](https://agentic-patterns.com):
 
-1. Write a `constitution.md` for each technical domain your team owns
-2. Record every significant architectural decision as an ADR
-3. Identify your three most commonly violated conventions and write a validator for each
-4. Run those validators in CI
-
-The methodology scales from there. The tooling accelerates it.
+| Pattern | Category | How it maps |
+|---|---|---|
+| [Versioned Constitution Governance](https://github.com/nibzard/awesome-agentic-patterns/blob/main/patterns/versioned-constitution-governance.md) | Reliability & Eval | The core methodology — governance rules versioned and enforced like code |
+| [MCP Pattern Injection](https://github.com/nibzard/awesome-agentic-patterns/blob/main/patterns/mcp-pattern-injection.md) | Tool Use & Environment | `get_conventions()`, `get_constitution()`, `get_knowledge("failures")` called at generation time |
+| [Spec-As-Test Feedback Loop](https://github.com/nibzard/awesome-agentic-patterns/blob/main/patterns/spec-as-test-feedback-loop.md) | Feedback Loops | Gherkin checks that gate CI |
+| [Layered Configuration Context](https://github.com/nibzard/awesome-agentic-patterns/blob/main/patterns/layered-configuration-context.md) | Context & Memory | The four-layer hierarchy: Constitution → ADRs → Validators → Gherkin |
+| [Memory Synthesis from Execution Logs](https://github.com/nibzard/awesome-agentic-patterns/blob/main/patterns/memory-synthesis-from-execution-logs.md) | Context & Memory | The failures catalog — platform-specific AI mistakes distilled into queryable context |
+| [Incident-to-Eval Synthesis](https://github.com/nibzard/awesome-agentic-patterns/blob/main/patterns/incident-to-eval-synthesis.md) | Feedback Loops | Roadmap: violations that reach production automatically become new catalog entries |
 
 ---
 
 ## Contributing
 
-Constitutional Governance is an open methodology. Contributions, critiques, domain examples, and implementations in other technology stacks are welcome.
+Contributions, critiques, domain examples, and implementations in other stacks are welcome.
 
 → [CONTRIBUTING.md](.github/CONTRIBUTING.md)
-
 → [GitHub Discussions](../../discussions)
 
 ---
